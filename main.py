@@ -5,6 +5,8 @@ from config import add_cors
 app = FastAPI()
 add_cors(app)
 
+#cambio
+
 class Item(BaseModel):
     id: int
     name: str
