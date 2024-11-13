@@ -15,7 +15,7 @@ class Item(BaseModel):
     ready: bool
     
 
-mercado = [
+mercado_db = [
     Item(id=1, name='Arroz',cuantity=1, price=0, ready=False),
     Item(id=2, name='Panela',cuantity=6, price=0, ready=False),
     Item(id=3, name='Cafe',cuantity=1, price=0, ready=False),
@@ -51,20 +51,30 @@ mercado = [
     ]
 @app.get('/')
 async def root():
-    return mercado
+    return mercado_db
 
-@app.get("/update/{item_id}")
-def update_user(item_id: int, item: Item):
-    # Busca el usuario en la base de datos
-    user = next((u for u in mercado if u["id"] == item_id), None)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+def search_item(item_id: int):
+    # Buscar el item con el id especificado
+    item = next((item for item in mercado_db if item.id == item_id), None)
+    if item:
+        return item
+    else:
+        # Lanzar una excepción si el item no se encuentra
+        raise HTTPException(status_code=404, detail="Item not found")
 
-    # Actualiza los datos del usuario
-    # if item.name is not None:
-    #     user["name"] = item.name
-    # if item.ready is not None:
-    #     user["ready"] = item.ready
+# @app.get('/item/{item_id}')
+# def search_item(item_id: int):
+#     if item_id  in mercado_db:
+#         return Item(**mercado_db[item_id])
 
-    # return {"message": "User updated successfully", "user": user}
+@app.get('/item/{item_id}')
+async def search_items(item_id: int):
+    item = search_item(item_id)
+    return item
+
+@app.get('/item/update/{item_id}')
+async def update_item(item_id: int):
+    item = search_item(item_id)
+    item.price = 500
+    item.ready = True
+    return item
