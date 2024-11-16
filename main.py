@@ -1,21 +1,33 @@
-from fastapi import FastAPI,  HTTPException
+
+
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from config import add_cors
+from typing import List, Optional
 
 app = FastAPI()
-add_cors(app)
 
-#cambio
+# Simulación de base de datos
+fake_db = [
+    {"id": 1, "name": "Item 1", "cuantity": 10, "price": 100, "ready": False},
+    {"id": 2, "name": "Item 2", "cuantity": 5, "price": 200, "ready": True},
+]
 
+# Clase Item
 class Item(BaseModel):
     id: int
     name: str
     cuantity: int
-    price : int
+    price: int
     ready: bool
-    
 
-mercado_db = [
+# Clase para actualizaciones parciales
+class ItemUpdate(BaseModel):
+    price: Optional[int] = None
+    ready: Optional[bool] = None
+
+
+
+mercado_db: List[Item] = [
     Item(id=1, name='Arroz',cuantity=1, price=0, ready=False),
     Item(id=2, name='Panela',cuantity=6, price=0, ready=False),
     Item(id=3, name='Cafe',cuantity=1, price=0, ready=False),
@@ -49,28 +61,35 @@ mercado_db = [
     
     
     ]
+
+
+# Función para buscar un ítem
+def search_item(item_id: int) -> Optional[Item]:
+    for item in mercado_db:
+        if item.id == item_id:
+            return item
+    return None
+
+
 @app.get('/')
 async def root():
     return mercado_db
 
-def search_item(item_id: int):
-    # Buscar el item con el id especificado
-    item = next((item for item in mercado_db if item.id == item_id), None)
-    if item:
-        return item
-    else:
-        # Lanzar una excepción si el item no se encuentra
+@app.get('/items/{item_id}')
+async def search_item_by_id(item_id: int):
+    return search_item(item_id)
+
+# Endpoint PATCH para actualizar el ítem
+@app.patch('/item/update/{item_id}')
+async def update_item(item_id: int, updates: ItemUpdate):
+    # Buscar el ítem
+    item = search_item(item_id)
+    if not item:
         raise HTTPException(status_code=404, detail="Item not found")
- 
+    
+    if updates.price is not None:
+        item.price = updates.price
+    if updates.ready is not None:
+        item.ready = updates.ready
 
-@app.get('/item/{item_id}')
-async def search_items(item_id: int):
-    item = search_item(item_id)
-    return item
-
-@app.get('/item/update/{item_id}')
-async def update_item(item_id: int):
-    item = search_item(item_id)
-    item.price = 500
-    item.ready = True 
-    return item
+    return {"msg": "Item updated successfully", "item": item}
