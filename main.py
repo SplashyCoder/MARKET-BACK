@@ -61,11 +61,7 @@ def search_item(item_id: int):
     else:
         # Lanzar una excepción si el item no se encuentra
         raise HTTPException(status_code=404, detail="Item not found")
-
-# @app.get('/item/{item_id}')
-# def search_item(item_id: int):
-#     if item_id  in mercado_db:
-#         return Item(**mercado_db[item_id])
+ 
 
 @app.get('/item/{item_id}')
 async def search_items(item_id: int):
@@ -76,5 +72,5 @@ async def search_items(item_id: int):
 async def update_item(item_id: int):
     item = search_item(item_id)
     item.price = 500
-    item.ready = True
+    item.ready = True 
     return item
